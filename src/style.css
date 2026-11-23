@@ -1,0 +1,39 @@
+* { box-sizing: border-box }
+body { margin: 0; font-family: system-ui, sans-serif; color: #222 }
+.app { display: flex; min-height: 100vh }
+nav { width: 230px; background: #f4f4f4; padding: 10px; overflow-y: auto; height: 100vh; position: sticky; top: 0; flex-shrink: 0 }
+nav h2 { margin: 4px 0 8px; font-size: 18px }
+nav h4 { margin: 10px 0 2px; font-size: 12px; text-transform: uppercase; color: #777 }
+nav a { display: block; padding: 2px 6px; color: #222; text-decoration: none; font-size: 14px; border-radius: 3px }
+nav a.on, nav a:hover { background: #dde8f5 }
+main { flex: 1; padding: 14px 20px; min-width: 0 }
+h1 { margin: 0 0 10px; font-size: 22px }
+.row { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; flex-wrap: wrap }
+.row > input:first-child { flex: 1; min-width: 200px; padding: 5px; font-family: monospace }
+button { padding: 4px 10px; cursor: pointer }
+.hint { font-size: 12px; color: #666; margin-bottom: 8px }
+.err { color: #c00 }
+.msg { background: #fffbe6; border: 1px solid #eedc9a; padding: 6px 10px; margin-bottom: 10px; min-height: 34px }
+.body { display: flex; gap: 16px; flex-wrap: wrap }
+.views { flex: 2; min-width: 300px; display: flex; flex-direction: column; gap: 12px }
+.side { flex: 1; min-width: 260px }
+.view { border: 1px solid #ddd; padding: 8px; overflow-x: auto }
+.vtitle { font-size: 12px; color: #666; margin-bottom: 4px }
+.arr { display: flex; gap: 3px; align-items: flex-end }
+.cell { display: flex; flex-direction: column; align-items: center; min-width: 34px }
+.bar { width: 28px }
+.box { border: 1px solid #555; min-width: 34px; height: 30px; padding: 0 3px; display: flex; align-items: center; justify-content: center; font-family: monospace }
+.idx { font-size: 11px; color: #888 }
+.ptr { font-size: 11px; color: #c0392b; font-weight: bold; height: 14px }
+.nlabel { font-size: 13px; font-family: monospace }
+.nsub { font-size: 11px; fill: #c0392b; font-weight: bold }
+.elabel { font-size: 11px; fill: #2c3e50 }
+.grid { border-collapse: collapse; font-family: monospace }
+.grid td, .grid th { border: 1px solid #aaa; min-width: 30px; height: 28px; text-align: center; padding: 0 4px }
+.grid th { background: #f0f0f0; font-weight: normal; color: #666 }
+.code { background: #f7f7f7; border: 1px solid #ddd; padding: 6px 0; font-size: 13px; margin: 0 }
+.code div { padding: 0 10px; white-space: pre }
+.code .hl { background: #ffe08a }
+.vars { margin-top: 8px; font-family: monospace; font-size: 12px; border-collapse: collapse }
+.vars td { border: 1px solid #ddd; padding: 2px 6px }
+.side ul { padding-left: 18px; font-size: 14px }
