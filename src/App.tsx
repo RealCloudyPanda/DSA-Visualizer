@@ -5,6 +5,7 @@ import { COMPLEXITY } from './complexity'
 import { ViewBox } from './Views'
 import Settings from './Settings'
 import Help from './Help'
+import Home from './Home'
 import { DEFAULT_PREFS, Prefs, applyPrefs, useStored, COLOR_KEYS } from './prefs'
 
 const mods = import.meta.glob<{ default: Algo }>('./algos/*.ts', { eager: true })
@@ -22,6 +23,7 @@ export default function App() {
   const flip = (list: string[], set: (v: string[]) => void, id: string) => set(list.includes(id) ? list.filter(x => x !== id) : [...list, id])
   useEffect(() => { if (!toast) return; const t = setTimeout(() => setToast(''), 1800); return () => clearTimeout(t) }, [toast])
   const [algo, setAlgo] = useState(pick)
+  const [home, setHome] = useState(() => !parseHash().id)
   const [input, setInput] = useState(algo.input)
   const history = saved[algo.id] ?? []
   const [frames, setFrames] = useState<Frame[]>([])
@@ -49,7 +51,8 @@ export default function App() {
     setPlaying(auto)
   }
   const load = () => {
-    const a = pick(); const h = parseHash(); const s = h.input ?? JSON.parse(localStorage.inputs ?? '{}')[a.id]?.[0] ?? a.input
+    const h = parseHash(); setHome(!h.id); if (!h.id) { document.title = 'DSA Visualizer'; setPlaying(false); return }
+    const a = pick(); localStorage.lastId = a.id; const s = h.input ?? JSON.parse(localStorage.inputs ?? '{}')[a.id]?.[0] ?? a.input
     setAlgo(a); setInput(s); run(a, s, false, h.input ? h.step : 0, !!h.input); document.title = `${a.name} · DSA Visualizer`
   }
   useEffect(() => { addEventListener('hashchange', load); load(); return () => removeEventListener('hashchange', load) }, [])
@@ -67,7 +70,7 @@ export default function App() {
   const f = frames[i]
   const togglePlay = () => { if (i >= frames.length - 1) setI(0); setPlaying(p => !p) }
   const go = (d: number) => { const k = ALGOS.findIndex(a => a.id === algo.id); location.hash = ALGOS[(k + d + ALGOS.length) % ALGOS.length].id }
-  const randomize = () => { const s = algo.rand(); setInput(s); run(algo, s) }
+  const randomize = () => { if (home) return; const s = algo.rand(); setInput(s); run(algo, s) }
   const last = Math.max(0, frames.length - 1)
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
@@ -88,7 +91,7 @@ export default function App() {
   return (
     <div className={'app' + (navOpen ? ' nav-open' : '') + (focus ? ' focus' : '')}>
       <nav>
-        <div className="brand"><div className="logo">DS</div><h2>DSA Visualizer</h2></div>
+        <a className="brand" href="#" onClick={() => setNavOpen(false)} title="Home"><div className="logo">DS</div><h2>DSA Visualizer</h2></a>
         <div className="progress" title="Visualizers marked as learned">
           <div className="pbar"><div style={{ width: `${(100 * learned.length) / ALGOS.length}%` }} /></div>
           <span>{learned.length} / {ALGOS.length} learned</span>
@@ -97,6 +100,7 @@ export default function App() {
       </nav>
       <div className="scrim" onClick={() => setNavOpen(false)} />
       <main>
+        {home ? <><button className="icon menu" onClick={() => setNavOpen(true)} title="Menu">☰</button><Home algos={ALGOS} learned={learned} favs={favs} lastId={localStorage.lastId} /></> : <>
         <div className="head">
           <button className="icon menu" onClick={() => setNavOpen(true)} title="Menu">☰</button>
           <h1>{algo.name}</h1><span className="tag">{algo.cat}</span>
@@ -140,6 +144,7 @@ export default function App() {
             {prefs.showProblems && <div className="card"><h4>Practice problems</h4><ul>{algo.problems.map(p => <li key={p}>{p}</li>)}</ul></div>}
           </div>
         </div>
+        </>}
       </main>
       {toast && <div className="toast">{toast}</div>}
       {help && <Help onClose={() => setHelp(false)} />}
