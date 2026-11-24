@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Algo, Frame } from './core'
 import Sidebar from './Sidebar'
+import { COMPLEXITY } from './complexity'
 import { ViewBox } from './Views'
 import Settings from './Settings'
 import Help from './Help'
@@ -106,6 +107,7 @@ export default function App() {
           <button className="icon" onClick={share} title="Copy a link to this input and step">🔗</button>
         </div>
         {algo.hint && <div className="hint">{algo.hint}</div>}
+        {COMPLEXITY[algo.id] && <div className="cx"><span title="Time complexity">⏱ {COMPLEXITY[algo.id].time}</span><span title="Extra space">▦ {COMPLEXITY[algo.id].space}</span>{COMPLEXITY[algo.id].note && <span className="note">{COMPLEXITY[algo.id].note}</span>}</div>}
         <div className="row player">
           <button className="icon" title="First step (Home)" onClick={() => setI(0)}>⏮</button>
           <button className="icon" title="Previous step (←)" onClick={() => setI(Math.max(0, i - 1))}>◀</button>
