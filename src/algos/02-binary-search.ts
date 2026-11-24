@@ -7,7 +7,7 @@ export default {
   run(s) {
     const [p, q] = s.split('|'); const a = nums(p).sort((x, y) => x - y); const t = Number(q); const tr = new Tracer()
     let lo = 0, hi = a.length - 1
-    const col = (m?: number) => ({ ...range(0, a.length - 1, C.dim), ...range(lo, hi, '#fff'), ...(m !== undefined ? { [m]: C.cmp } : {}) })
+    const col = (m?: number) => ({ ...range(0, a.length - 1, C.dim), ...range(lo, hi, C.box), ...(m !== undefined ? { [m]: C.cmp } : {}) })
     tr.add(1, 'Search the whole array', arr(a, col(), { lo, hi }), { lo, hi })
     while (lo <= hi) {
       const mid = (lo + hi) >> 1

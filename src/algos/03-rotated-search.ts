@@ -6,7 +6,7 @@ export default {
   rand: () => { const a = [...new Set(Array.from({ length: 9 }, () => ri(1, 60)))].sort((x, y) => x - y); const k = ri(1, a.length - 1); const r = [...a.slice(k), ...a.slice(0, k)]; return `${r.join(', ')} | ${r[ri(0, r.length - 1)]}` },
   run(s) {
     const [p, q] = s.split('|'); const a = nums(p); const t = Number(q); const tr = new Tracer(); let lo = 0, hi = a.length - 1
-    const col = (m: number) => ({ ...range(0, a.length - 1, C.dim), ...range(lo, hi, '#fff'), [m]: C.cmp })
+    const col = (m: number) => ({ ...range(0, a.length - 1, C.dim), ...range(lo, hi, C.box), [m]: C.cmp })
     while (lo <= hi) {
       const mid = (lo + hi) >> 1
       tr.add(3, `mid = ${mid}`, arr(a, col(mid), { lo, hi, mid }), { lo, hi, mid })

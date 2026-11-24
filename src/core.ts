@@ -9,7 +9,7 @@ export type View = ArrayView | GraphView | GridView | PlotView
 export type Frame = { line: number; msg: string; views: View[]; vars?: Record<string, unknown> }
 export type Algo = { name: string; cat: string; problems: string[]; code: string[]; input: string; hint?: string; rand: () => string; run: (s: string) => Frame[] }
 
-export const C = { cmp: '#f5a623', swap: '#e74c3c', done: '#2ecc71', act: '#3498db', vis: '#9b59b6', dim: '#ccc' }
+export const C = { cmp: 'var(--c-cmp)', swap: 'var(--c-swap)', done: 'var(--c-done)', act: 'var(--c-act)', vis: 'var(--c-vis)', dim: 'var(--c-dim)', box: 'var(--box)', soft: 'var(--c-soft)', end: 'var(--c-end)' }
 export const CATS = ['Searching', 'Sorting', 'Arrays & Hashing', 'Two Pointers', 'Sliding Window', 'Stack', 'Linked List', 'Trees', 'Tries', 'Heaps', 'Intervals', 'Graphs', 'Backtracking', 'Dynamic Programming', 'Bit Manipulation', 'ML Extras']
 
 export class Tracer {

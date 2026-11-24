@@ -4,7 +4,7 @@ const view = (root: N, col: Record<number, string>): GraphView => {
   const nodes: GNode[] = []; const edges: GEdge[] = []; let x = 0
   const walk = (n: N, d: number): number => {
     const ks = [...n.kids.values()]; const xs = ks.map(k => walk(k, d + 1)); const mx = xs.length ? (xs[0] + xs[xs.length - 1]) / 2 : 30 + 45 * x++
-    nodes.push({ id: n.id, x: mx, y: 30 + 60 * d, label: n.ch, color: col[n.id] ?? (n.end ? '#d5f5e3' : undefined), sub: n.end ? '•end' : undefined }); ks.forEach(k => edges.push({ a: n.id, b: k.id })); return mx
+    nodes.push({ id: n.id, x: mx, y: 30 + 60 * d, label: n.ch, color: col[n.id] ?? (n.end ? C.end : undefined), sub: n.end ? '•end' : undefined }); ks.forEach(k => edges.push({ a: n.id, b: k.id })); return mx
   }
   walk(root, 0); return { kind: 'graph', nodes, edges }
 }

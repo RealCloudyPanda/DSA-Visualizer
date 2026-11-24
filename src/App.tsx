@@ -14,6 +14,8 @@ export default function App() {
   const [playing, setPlaying] = useState(false)
   const [speed, setSpeed] = useState(500)
   const [err, setErr] = useState('')
+  const [theme, setTheme] = useState(() => localStorage.theme ?? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'))
+  useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.theme = theme }, [theme])
 
   const run = (a: Algo, s: string) => {
     try { setFrames(a.run(s)); setErr('') } catch (e) { setFrames([]); setErr(String(e)) }
@@ -38,7 +40,7 @@ export default function App() {
         ))}
       </nav>
       <main>
-        <h1>{algo.name}</h1>
+        <div className="head"><h1>{algo.name}</h1><span className="grow" /><button className="icon" title="Toggle theme" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>{theme === 'dark' ? '☀' : '☾'}</button></div>
         <div className="row">
           <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && run(algo, input)} />
           <button onClick={() => run(algo, input)}>Run</button>
@@ -60,7 +62,7 @@ export default function App() {
         <div className="body">
           <div className="views">{f?.views.map((v, k) => <ViewBox key={k} v={v} />)}</div>
           <div className="side">
-            <pre className="code">{algo.code.map((l, k) => <div key={k} className={f?.line === k + 1 ? 'hl' : ''}>{l || ' '}</div>)}</pre>
+            <pre className="code card">{algo.code.map((l, k) => <div key={k} className={f?.line === k + 1 ? 'hl' : ''}>{l || ' '}</div>)}</pre>
             {f?.vars && <table className="vars"><tbody>{Object.entries(f.vars).map(([k, v]) => <tr key={k}><td>{k}</td><td>{JSON.stringify(v)}</td></tr>)}</tbody></table>}
             <h4>Practice problems</h4>
             <ul>{algo.problems.map(p => <li key={p}>{p}</li>)}</ul>
