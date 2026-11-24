@@ -8,12 +8,18 @@ import { DEFAULT_PREFS, Prefs, applyPrefs, useStored } from './prefs'
 
 const mods = import.meta.glob<{ default: Algo }>('./algos/*.ts', { eager: true })
 const ALGOS = Object.entries(mods).map(([p, m]) => ({ id: p.slice(8, -3), ...m.default }))
-const pick = () => ALGOS.find(a => a.id === location.hash.slice(1)) ?? ALGOS[0]
+type Entry = (typeof ALGOS)[number]
+const parseHash = () => { const [id, qs] = location.hash.slice(1).split('?'); const q = new URLSearchParams(qs); return { id, input: q.get('in'), step: Number(q.get('step') ?? 0) } }
+const pick = () => ALGOS.find(a => a.id === parseHash().id) ?? ALGOS[0]
 
 export default function App() {
   const [prefs, setPrefs] = useStored<Prefs>('prefs', DEFAULT_PREFS)
+  const [saved, setSaved] = useStored<Record<string, string[]>>('inputs', {})
+  const [toast, setToast] = useState('')
+  useEffect(() => { if (!toast) return; const t = setTimeout(() => setToast(''), 1800); return () => clearTimeout(t) }, [toast])
   const [algo, setAlgo] = useState(pick)
   const [input, setInput] = useState(algo.input)
+  const history = saved[algo.id] ?? []
   const [frames, setFrames] = useState<Frame[]>([])
   const [i, setI] = useState(0)
   const [playing, setPlaying] = useState(false)
@@ -30,14 +36,23 @@ export default function App() {
     const m = matchMedia('(prefers-color-scheme: dark)'); const h = () => applyPrefs(prefs); m.addEventListener('change', h); return () => m.removeEventListener('change', h)
   }, [prefs])
 
-  const run = (a: Algo, s: string, auto = prefs.autoplay) => {
-    try { setFrames(a.run(s)); setErr('') } catch (e) { setFrames([]); setErr(e instanceof Error ? e.message : String(e)) }
-    setI(0); setPlaying(auto)
+  const run = (a: Entry, s: string, auto = prefs.autoplay, step = 0, remember = true) => {
+    try {
+      const fr = a.run(s); setFrames(fr); setErr(''); setI(Math.min(step, Math.max(0, fr.length - 1)))
+      if (remember) setSaved(o => ({ ...o, [a.id]: [s, ...(o[a.id] ?? []).filter(x => x !== s)].slice(0, 8) }))
+    } catch (e) { setFrames([]); setErr(e instanceof Error ? e.message : String(e)); setI(0) }
+    setPlaying(auto)
   }
-  useEffect(() => {
-    const h = () => { const a = pick(); setAlgo(a); setInput(a.input); run(a, a.input, false) }
-    addEventListener('hashchange', h); run(algo, algo.input, false); return () => removeEventListener('hashchange', h)
-  }, [])
+  const load = () => {
+    const a = pick(); const h = parseHash(); const s = h.input ?? JSON.parse(localStorage.inputs ?? '{}')[a.id]?.[0] ?? a.input
+    setAlgo(a); setInput(s); run(a, s, false, h.input ? h.step : 0, !!h.input); document.title = `${a.name} · DSA Visualizer`
+  }
+  useEffect(() => { addEventListener('hashchange', load); load(); return () => removeEventListener('hashchange', load) }, [])
+  const share = async () => {
+    const url = `${location.origin}${location.pathname}#${algo.id}?in=${encodeURIComponent(input)}&step=${i}`
+    try { await navigator.clipboard.writeText(url); setToast('Link copied: opens at this exact step') } catch { setToast('Could not copy the link') }
+  }
+  const reset = () => { setInput(algo.input); run(algo, algo.input, false) }
   useEffect(() => {
     if (!playing) return
     if (i >= frames.length - 1) { if (prefs.loop && frames.length > 1) { const t = setTimeout(() => setI(0), speed * 2); return () => clearTimeout(t) } setPlaying(false); return }
@@ -83,9 +98,12 @@ export default function App() {
           <button className="icon" title="Settings (S)" onClick={() => setSettings(true)}>⚙</button>
         </div>
         <div className="row">
-          <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && run(algo, input)} spellCheck={false} />
+          <input value={input} list="hist" onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && run(algo, input)} spellCheck={false} aria-label="Input" />
+          <datalist id="hist">{history.map(h => <option key={h} value={h} />)}</datalist>
           <button className="primary" onClick={() => run(algo, input)}>Run</button>
-          <button onClick={randomize} title="Random input (R)">Random</button>
+          <button onClick={randomize} title="Random input (R)">🎲 Random</button>
+          <button className="icon" onClick={reset} title="Reset to the example input">↺</button>
+          <button className="icon" onClick={share} title="Copy a link to this input and step">🔗</button>
         </div>
         {algo.hint && <div className="hint">{algo.hint}</div>}
         <div className="row player">
@@ -109,6 +127,7 @@ export default function App() {
           </div>
         </div>
       </main>
+      {toast && <div className="toast">{toast}</div>}
       {help && <Help onClose={() => setHelp(false)} />}
       {settings && <Settings prefs={prefs} set={setPrefs} onClose={() => setSettings(false)} />}
     </div>

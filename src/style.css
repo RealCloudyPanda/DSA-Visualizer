@@ -101,3 +101,5 @@ nav a .grow { flex: 1 }
   .player .speed { width: 100% }
 }
 .tag { font-size: .72em; padding: 2px 8px; border-radius: 99px; background: var(--hover); color: var(--muted); white-space: nowrap }
+.toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 9px 16px; border-radius: 99px; font-size: .9em; z-index: 60; animation: up .2s; box-shadow: 0 8px 24px rgba(0,0,0,.25) }
+@keyframes up { from { transform: translate(-50%, 10px); opacity: 0 } }
