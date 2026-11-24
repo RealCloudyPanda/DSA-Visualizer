@@ -131,3 +131,6 @@ nav a .grow { flex: 1 }
 .log div { padding: 3px 6px; border-radius: 4px; cursor: pointer; display: flex; gap: 8px } .log div:hover { background: var(--hover) }
 .log span { color: var(--muted); min-width: 26px; text-align: right; font-variant-numeric: tabular-nums }
 .log .past { opacity: .55 } .log .on { background: var(--hl); opacity: 1 }
+.body.stacked { flex-direction: column } .body.stacked .views, .body.stacked .side { width: 100%; flex: none } .body.stacked .side { flex-direction: row; flex-wrap: wrap } .body.stacked .side > * { flex: 1; min-width: 260px }
+[data-idx='off'] .idx { display: none }
+.speed { min-width: 150px }

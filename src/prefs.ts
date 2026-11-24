@@ -7,9 +7,9 @@ export const ACCENTS = ['#4f6bed', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '
 export type Prefs = {
   theme: 'system' | 'light' | 'dark'; accent: string; colors: Partial<Record<keyof typeof COLOR_KEYS, string>>
   scale: number; zoom: number; speed: number; autoplay: boolean; loop: boolean
-  showCode: boolean; showVars: boolean; showProblems: boolean; showLog: boolean; anim: boolean
+  showCode: boolean; showVars: boolean; showProblems: boolean; showLog: boolean; anim: boolean; sound: boolean; layout: 'side' | 'stacked'; indices: boolean
 }
-export const DEFAULT_PREFS: Prefs = { theme: 'system', accent: ACCENTS[0], colors: {}, scale: 1, zoom: 1, speed: 500, autoplay: false, loop: false, showCode: true, showVars: true, showProblems: true, showLog: true, anim: true }
+export const DEFAULT_PREFS: Prefs = { theme: 'system', accent: ACCENTS[0], colors: {}, scale: 1, zoom: 1, speed: 500, autoplay: false, loop: false, showCode: true, showVars: true, showProblems: true, showLog: true, anim: true, sound: false, layout: 'side', indices: true }
 
 export function useStored<T>(key: string, init: T) {
   const [v, setV] = useState<T>(() => {
@@ -24,7 +24,17 @@ export function applyPrefs(p: Prefs) {
   const r = document.documentElement
   r.dataset.theme = dark ? 'dark' : 'light'
   r.dataset.anim = p.anim ? 'on' : 'off'
+  r.dataset.idx = p.indices ? 'on' : 'off'
   r.style.setProperty('--accent', p.accent)
   r.style.setProperty('--scale', String(p.scale))
   for (const k of Object.keys(COLOR_KEYS) as (keyof typeof COLOR_KEYS)[]) { const c = p.colors[k]; if (c) r.style.setProperty(`--c-${k}`, c); else r.style.removeProperty(`--c-${k}`) }
+}
+
+let ctx: AudioContext | undefined
+export function beep(freq: number) {
+  try {
+    ctx ??= new AudioContext(); const o = ctx.createOscillator(); const g = ctx.createGain()
+    o.frequency.value = freq; o.type = 'sine'; g.gain.setValueAtTime(0.06, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.12)
+    o.connect(g).connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 0.13)
+  } catch { /* audio unavailable */ }
 }

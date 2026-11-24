@@ -3,7 +3,7 @@ import { Prefs, DEFAULT_PREFS, COLOR_KEYS, DEFAULT_COLORS, ACCENTS } from './pre
 type P = { prefs: Prefs; set: (p: Prefs) => void; onClose: () => void }
 export default function Settings({ prefs, set, onClose }: P) {
   const up = <K extends keyof Prefs>(k: K, v: Prefs[K]) => set({ ...prefs, [k]: v })
-  const tog = (k: 'autoplay' | 'loop' | 'showCode' | 'showVars' | 'showProblems' | 'showLog' | 'anim', label: string) => (
+  const tog = (k: 'autoplay' | 'loop' | 'showCode' | 'showVars' | 'showProblems' | 'showLog' | 'anim' | 'sound' | 'indices', label: string) => (
     <label className="tog"><input type="checkbox" checked={prefs[k]} onChange={e => up(k, e.target.checked)} />{label}</label>
   )
   return (
@@ -17,6 +17,8 @@ export default function Settings({ prefs, set, onClose }: P) {
           <label className="slider">Text size <input type="range" min={0.8} max={1.4} step={0.05} value={prefs.scale} onChange={e => up('scale', +e.target.value)} /><span>{Math.round(prefs.scale * 100)}%</span></label>
           <label className="slider">Visual zoom <input type="range" min={0.6} max={2} step={0.1} value={prefs.zoom} onChange={e => up('zoom', +e.target.value)} /><span>{Math.round(prefs.zoom * 100)}%</span></label>
           {tog('anim', 'Smooth transitions')}
+          {tog('indices', 'Show array indices')}
+          <div className="seg">Layout {(['side', 'stacked'] as const).map(t => <button key={t} className={prefs.layout === t ? 'primary' : ''} onClick={() => up('layout', t)}>{t === 'side' ? 'Side by side' : 'Stacked'}</button>)}</div>
         </section>
         <section>
           <h4>Highlight colors</h4>
@@ -31,6 +33,7 @@ export default function Settings({ prefs, set, onClose }: P) {
           <h4>Playback</h4>
           {tog('autoplay', 'Auto-play after Run / Random')}
           {tog('loop', 'Loop when finished')}
+          {tog('sound', 'Play a tone on each step')}
         </section>
         <section>
           <h4>Panels</h4>

@@ -6,7 +6,7 @@ import { ViewBox } from './Views'
 import Settings from './Settings'
 import Help from './Help'
 import Home from './Home'
-import { DEFAULT_PREFS, Prefs, applyPrefs, useStored, COLOR_KEYS } from './prefs'
+import { DEFAULT_PREFS, Prefs, applyPrefs, useStored, COLOR_KEYS, beep } from './prefs'
 
 const mods = import.meta.glob<{ default: Algo }>('./algos/*.ts', { eager: true })
 const ALGOS = Object.entries(mods).map(([p, m]) => ({ id: p.slice(8, -3), ...m.default }))
@@ -37,6 +37,7 @@ export default function App() {
   const [focus, setFocus] = useState(false)
   const searchRef = useRef<HTMLInputElement>(null)
   const logRef = useRef<HTMLDivElement>(null)
+  useEffect(() => { if (prefs.sound && frames[i]) beep(220 + frames[i].line * 70 + (i % 3) * 15) }, [i, frames])
   useEffect(() => { const el = logRef.current?.querySelector('.on') as HTMLElement | null; const box = logRef.current; if (el && box) box.scrollTop = el.offsetTop - box.offsetTop - box.clientHeight / 2 }, [i])
   const speed = prefs.speed
 
@@ -133,12 +134,12 @@ export default function App() {
           <button className="icon" title="Last step (End)" onClick={() => setI(frames.length - 1)}>⏭</button>
           <input className="scrub" type="range" min={0} max={Math.max(0, frames.length - 1)} value={i} onChange={e => setI(+e.target.value)} />
           <span className="count">{frames.length ? i + 1 : 0} / {frames.length}</span>
-          <label className="speed">Speed <input type="range" min={50} max={1500} step={50} value={1550 - speed} onChange={e => setPrefs({ ...prefs, speed: 1550 - +e.target.value })} /></label>
+          <label className="speed" title="[ slower, ] faster">{speed >= 1000 ? (speed / 1000).toFixed(1) + 's' : speed + 'ms'} <input type="range" min={50} max={1500} step={50} value={1550 - speed} onChange={e => setPrefs({ ...prefs, speed: 1550 - +e.target.value })} /></label>
         </div>
         {err && <div className="err">⚠ {err}</div>}
         <div className="msg">{f?.msg}</div>
         {legend.length > 0 && <div className="legend">{legend.map(k => <span key={k}><i style={{ background: `var(--c-${k})` }} />{COLOR_KEYS[k]}</span>)}</div>}
-        <div className="body">
+        <div className={'body ' + prefs.layout}>
           <div className="views" style={{ zoom: prefs.zoom }}>{f?.views.map((v, k) => <ViewBox key={k} v={v} />)}</div>
           <div className="side">
             {prefs.showCode && <div className="codewrap"><button className="icon copy" title="Copy pseudocode" onClick={() => navigator.clipboard.writeText(algo.code.join('\n')).then(() => setToast('Pseudocode copied'))}>⧉</button><pre className="code card">{algo.code.map((l, k) => <div key={k} className={f?.line === k + 1 ? 'hl' : ''}><span className="ln">{k + 1}</span>{l || ' '}</div>)}</pre></div>}
