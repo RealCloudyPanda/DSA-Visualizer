@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Algo, Frame } from './core'
 import Sidebar from './Sidebar'
 import { COMPLEXITY } from './complexity'
 import { ViewBox } from './Views'
 import Settings from './Settings'
 import Help from './Help'
-import { DEFAULT_PREFS, Prefs, applyPrefs, useStored } from './prefs'
+import { DEFAULT_PREFS, Prefs, applyPrefs, useStored, COLOR_KEYS } from './prefs'
 
 const mods = import.meta.glob<{ default: Algo }>('./algos/*.ts', { eager: true })
 const ALGOS = Object.entries(mods).map(([p, m]) => ({ id: p.slice(8, -3), ...m.default }))
@@ -22,6 +22,7 @@ export default function App() {
   const [input, setInput] = useState(algo.input)
   const history = saved[algo.id] ?? []
   const [frames, setFrames] = useState<Frame[]>([])
+  const legend = useMemo(() => { const j = JSON.stringify(frames); return (Object.keys(COLOR_KEYS) as (keyof typeof COLOR_KEYS)[]).filter(k => j.includes(`var(--c-${k})`)) }, [frames])
   const [i, setI] = useState(0)
   const [playing, setPlaying] = useState(false)
   const [err, setErr] = useState('')
@@ -120,6 +121,7 @@ export default function App() {
         </div>
         {err && <div className="err">⚠ {err}</div>}
         <div className="msg">{f?.msg}</div>
+        {legend.length > 0 && <div className="legend">{legend.map(k => <span key={k}><i style={{ background: `var(--c-${k})` }} />{COLOR_KEYS[k]}</span>)}</div>}
         <div className="body">
           <div className="views" style={{ zoom: prefs.zoom }}>{f?.views.map((v, k) => <ViewBox key={k} v={v} />)}</div>
           <div className="side">
