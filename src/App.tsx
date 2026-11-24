@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Algo, CATS, Frame } from './core'
 import { ViewBox } from './Views'
 import Settings from './Settings'
+import Help from './Help'
 import { DEFAULT_PREFS, Prefs, applyPrefs, useStored } from './prefs'
 
 const mods = import.meta.glob<{ default: Algo }>('./algos/*.ts', { eager: true })
@@ -17,6 +18,7 @@ export default function App() {
   const [playing, setPlaying] = useState(false)
   const [err, setErr] = useState('')
   const [settings, setSettings] = useState(false)
+  const [help, setHelp] = useState(false)
   const speed = prefs.speed
 
   useEffect(() => {
@@ -41,6 +43,25 @@ export default function App() {
   const groups = useMemo(() => CATS.map(c => [c, ALGOS.filter(a => a.cat === c)] as const).filter(g => g[1].length), [])
   const f = frames[i]
   const togglePlay = () => { if (i >= frames.length - 1) setI(0); setPlaying(p => !p) }
+  const go = (d: number) => { const k = ALGOS.findIndex(a => a.id === algo.id); location.hash = ALGOS[(k + d + ALGOS.length) % ALGOS.length].id }
+  const randomize = () => { const s = algo.rand(); setInput(s); run(algo, s) }
+  const last = Math.max(0, frames.length - 1)
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement
+      if (e.key === 'Escape') { setSettings(false); setHelp(false); t.blur?.(); return }
+      if (t.tagName === 'INPUT' || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA' || e.metaKey || e.ctrlKey || e.altKey) return
+      const n = e.shiftKey ? 10 : 1
+      const map: Record<string, () => void> = {
+        ' ': togglePlay, ArrowRight: () => { setPlaying(false); setI(x => Math.min(last, x + n)) }, ArrowLeft: () => { setPlaying(false); setI(x => Math.max(0, x - n)) },
+        Home: () => setI(0), End: () => setI(last), r: randomize, j: () => go(1), k: () => go(-1),
+        '[': () => setPrefs({ ...prefs, speed: Math.min(1500, speed + 100) }), ']': () => setPrefs({ ...prefs, speed: Math.max(50, speed - 100) }),
+        t: () => setPrefs({ ...prefs, theme: document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark' }), s: () => setSettings(true), '?': () => setHelp(true),
+      }
+      const fn = map[e.key.length === 1 ? e.key.toLowerCase() : e.key] ?? map[e.key]; if (fn) { e.preventDefault(); fn() }
+    }
+    addEventListener('keydown', h); return () => removeEventListener('keydown', h)
+  })
   return (
     <div className="app">
       <nav>
@@ -52,20 +73,21 @@ export default function App() {
       <main>
         <div className="head">
           <h1>{algo.name}</h1><span className="grow" />
-          <button className="icon" title="Settings" onClick={() => setSettings(true)}>⚙</button>
+          <button className="icon" title="Keyboard shortcuts (?)" onClick={() => setHelp(true)}>⌨</button>
+          <button className="icon" title="Settings (S)" onClick={() => setSettings(true)}>⚙</button>
         </div>
         <div className="row">
           <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && run(algo, input)} spellCheck={false} />
           <button className="primary" onClick={() => run(algo, input)}>Run</button>
-          <button onClick={() => { const s = algo.rand(); setInput(s); run(algo, s) }}>Random</button>
+          <button onClick={randomize} title="Random input (R)">Random</button>
         </div>
         {algo.hint && <div className="hint">{algo.hint}</div>}
         <div className="row player">
-          <button className="icon" title="First step" onClick={() => setI(0)}>⏮</button>
-          <button className="icon" title="Previous step" onClick={() => setI(Math.max(0, i - 1))}>◀</button>
-          <button className="primary play" onClick={togglePlay}>{playing ? '❚❚ Pause' : '▶ Play'}</button>
-          <button className="icon" title="Next step" onClick={() => setI(Math.min(frames.length - 1, i + 1))}>▶</button>
-          <button className="icon" title="Last step" onClick={() => setI(frames.length - 1)}>⏭</button>
+          <button className="icon" title="First step (Home)" onClick={() => setI(0)}>⏮</button>
+          <button className="icon" title="Previous step (←)" onClick={() => setI(Math.max(0, i - 1))}>◀</button>
+          <button className="primary play" title="Play / pause (Space)" onClick={togglePlay}>{playing ? '❚❚ Pause' : '▶ Play'}</button>
+          <button className="icon" title="Next step (→)" onClick={() => setI(Math.min(frames.length - 1, i + 1))}>▶</button>
+          <button className="icon" title="Last step (End)" onClick={() => setI(frames.length - 1)}>⏭</button>
           <input className="scrub" type="range" min={0} max={Math.max(0, frames.length - 1)} value={i} onChange={e => setI(+e.target.value)} />
           <span className="count">{frames.length ? i + 1 : 0} / {frames.length}</span>
           <label className="speed">Speed <input type="range" min={50} max={1500} step={50} value={1550 - speed} onChange={e => setPrefs({ ...prefs, speed: 1550 - +e.target.value })} /></label>
@@ -81,6 +103,7 @@ export default function App() {
           </div>
         </div>
       </main>
+      {help && <Help onClose={() => setHelp(false)} />}
       {settings && <Settings prefs={prefs} set={setPrefs} onClose={() => setSettings(false)} />}
     </div>
   )

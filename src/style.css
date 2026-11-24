@@ -79,3 +79,5 @@ input[type=color] { width: 32px; height: 26px; padding: 0 2px; cursor: pointer }
 .player .play { min-width: 92px }
 .count { font-variant-numeric: tabular-nums; color: var(--muted); font-size: .85em; min-width: 64px; text-align: center }
 .speed { display: flex; gap: 6px; align-items: center; color: var(--muted); font-size: .85em }
+kbd { display: inline-block; min-width: 22px; padding: 1px 6px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; background: var(--code); font-family: ui-monospace, Menlo, monospace; font-size: .8em; text-align: center }
+.keys { width: 100%; border-collapse: collapse } .keys td { padding: 5px 4px; border-bottom: 1px solid var(--line) } .keys td:first-child { white-space: nowrap; width: 1% ; padding-right: 16px }
