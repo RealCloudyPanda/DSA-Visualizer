@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Algo, CATS, Frame } from './core'
+import { useEffect, useRef, useState } from 'react'
+import { Algo, Frame } from './core'
+import Sidebar from './Sidebar'
 import { ViewBox } from './Views'
 import Settings from './Settings'
 import Help from './Help'
@@ -19,6 +20,9 @@ export default function App() {
   const [err, setErr] = useState('')
   const [settings, setSettings] = useState(false)
   const [help, setHelp] = useState(false)
+  const [navOpen, setNavOpen] = useState(false)
+  const [focus, setFocus] = useState(false)
+  const searchRef = useRef<HTMLInputElement>(null)
   const speed = prefs.speed
 
   useEffect(() => {
@@ -40,7 +44,6 @@ export default function App() {
     const t = setTimeout(() => setI(i + 1), speed); return () => clearTimeout(t)
   }, [playing, i, frames, speed, prefs.loop])
 
-  const groups = useMemo(() => CATS.map(c => [c, ALGOS.filter(a => a.cat === c)] as const).filter(g => g[1].length), [])
   const f = frames[i]
   const togglePlay = () => { if (i >= frames.length - 1) setI(0); setPlaying(p => !p) }
   const go = (d: number) => { const k = ALGOS.findIndex(a => a.id === algo.id); location.hash = ALGOS[(k + d + ALGOS.length) % ALGOS.length].id }
@@ -56,23 +59,26 @@ export default function App() {
         ' ': togglePlay, ArrowRight: () => { setPlaying(false); setI(x => Math.min(last, x + n)) }, ArrowLeft: () => { setPlaying(false); setI(x => Math.max(0, x - n)) },
         Home: () => setI(0), End: () => setI(last), r: randomize, j: () => go(1), k: () => go(-1),
         '[': () => setPrefs({ ...prefs, speed: Math.min(1500, speed + 100) }), ']': () => setPrefs({ ...prefs, speed: Math.max(50, speed - 100) }),
-        t: () => setPrefs({ ...prefs, theme: document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark' }), s: () => setSettings(true), '?': () => setHelp(true),
+        t: () => setPrefs({ ...prefs, theme: document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark' }), s: () => setSettings(true), f: () => setFocus(x => !x), '/': () => { setNavOpen(true); setFocus(false); setTimeout(() => searchRef.current?.focus()) }, '?': () => setHelp(true),
       }
       const fn = map[e.key.length === 1 ? e.key.toLowerCase() : e.key] ?? map[e.key]; if (fn) { e.preventDefault(); fn() }
     }
     addEventListener('keydown', h); return () => removeEventListener('keydown', h)
   })
   return (
-    <div className="app">
+    <div className={'app' + (navOpen ? ' nav-open' : '') + (focus ? ' focus' : '')}>
       <nav>
-        <h2>DSA Visualizer</h2>
-        {groups.map(([c, list]) => (
-          <div key={c}><h4>{c}</h4>{list.map(a => <a key={a.id} href={'#' + a.id} className={a.id === algo.id ? 'on' : ''}>{a.name}</a>)}</div>
-        ))}
+        <div className="brand"><div className="logo">DS</div><h2>DSA Visualizer</h2></div>
+        <Sidebar ref={searchRef} algos={ALGOS} current={algo.id} onPick={() => setNavOpen(false)} />
       </nav>
+      <div className="scrim" onClick={() => setNavOpen(false)} />
       <main>
         <div className="head">
-          <h1>{algo.name}</h1><span className="grow" />
+          <button className="icon menu" onClick={() => setNavOpen(true)} title="Menu">☰</button>
+          <h1>{algo.name}</h1><span className="tag">{algo.cat}</span><span className="grow" />
+          <button className="icon" title="Previous visualizer (K)" onClick={() => go(-1)}>‹</button>
+          <button className="icon" title="Next visualizer (J)" onClick={() => go(1)}>›</button>
+          <button className={'icon' + (focus ? ' primary' : '')} title="Focus mode (F)" onClick={() => setFocus(!focus)}>⛶</button>
           <button className="icon" title="Keyboard shortcuts (?)" onClick={() => setHelp(true)}>⌨</button>
           <button className="icon" title="Settings (S)" onClick={() => setSettings(true)}>⚙</button>
         </div>
