@@ -125,3 +125,9 @@ nav a .grow { flex: 1 }
 .tile.done { border-left: 4px solid var(--c-done) }
 .tile code { font-size: .75em; color: var(--accent) } .tile small { color: var(--muted); font-size: .75em }
 .brand { text-decoration: none; color: var(--fg) }
+.codewrap { position: relative } .copy { position: absolute; top: 6px; right: 6px; padding: 2px 8px; min-width: 0; opacity: .6 } .copy:hover { opacity: 1 }
+.ln { display: inline-block; width: 22px; color: var(--muted); opacity: .6; user-select: none }
+.log { max-height: 220px; overflow-y: auto; font-size: .82em; position: relative }
+.log div { padding: 3px 6px; border-radius: 4px; cursor: pointer; display: flex; gap: 8px } .log div:hover { background: var(--hover) }
+.log span { color: var(--muted); min-width: 26px; text-align: right; font-variant-numeric: tabular-nums }
+.log .past { opacity: .55 } .log .on { background: var(--hl); opacity: 1 }

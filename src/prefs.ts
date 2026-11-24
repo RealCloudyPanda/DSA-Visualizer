@@ -7,9 +7,9 @@ export const ACCENTS = ['#4f6bed', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '
 export type Prefs = {
   theme: 'system' | 'light' | 'dark'; accent: string; colors: Partial<Record<keyof typeof COLOR_KEYS, string>>
   scale: number; zoom: number; speed: number; autoplay: boolean; loop: boolean
-  showCode: boolean; showVars: boolean; showProblems: boolean; anim: boolean
+  showCode: boolean; showVars: boolean; showProblems: boolean; showLog: boolean; anim: boolean
 }
-export const DEFAULT_PREFS: Prefs = { theme: 'system', accent: ACCENTS[0], colors: {}, scale: 1, zoom: 1, speed: 500, autoplay: false, loop: false, showCode: true, showVars: true, showProblems: true, anim: true }
+export const DEFAULT_PREFS: Prefs = { theme: 'system', accent: ACCENTS[0], colors: {}, scale: 1, zoom: 1, speed: 500, autoplay: false, loop: false, showCode: true, showVars: true, showProblems: true, showLog: true, anim: true }
 
 export function useStored<T>(key: string, init: T) {
   const [v, setV] = useState<T>(() => {

@@ -36,6 +36,8 @@ export default function App() {
   const [navOpen, setNavOpen] = useState(false)
   const [focus, setFocus] = useState(false)
   const searchRef = useRef<HTMLInputElement>(null)
+  const logRef = useRef<HTMLDivElement>(null)
+  useEffect(() => { const el = logRef.current?.querySelector('.on') as HTMLElement | null; const box = logRef.current; if (el && box) box.scrollTop = el.offsetTop - box.offsetTop - box.clientHeight / 2 }, [i])
   const speed = prefs.speed
 
   useEffect(() => {
@@ -139,8 +141,9 @@ export default function App() {
         <div className="body">
           <div className="views" style={{ zoom: prefs.zoom }}>{f?.views.map((v, k) => <ViewBox key={k} v={v} />)}</div>
           <div className="side">
-            {prefs.showCode && <pre className="code card">{algo.code.map((l, k) => <div key={k} className={f?.line === k + 1 ? 'hl' : ''}>{l || ' '}</div>)}</pre>}
+            {prefs.showCode && <div className="codewrap"><button className="icon copy" title="Copy pseudocode" onClick={() => navigator.clipboard.writeText(algo.code.join('\n')).then(() => setToast('Pseudocode copied'))}>⧉</button><pre className="code card">{algo.code.map((l, k) => <div key={k} className={f?.line === k + 1 ? 'hl' : ''}><span className="ln">{k + 1}</span>{l || ' '}</div>)}</pre></div>}
             {prefs.showVars && f?.vars && <div className="card"><h4>Variables</h4><table className="vars"><tbody>{Object.entries(f.vars).map(([k, v]) => <tr key={k}><td>{k}</td><td>{JSON.stringify(v)}</td></tr>)}</tbody></table></div>}
+            {prefs.showLog && frames.length > 0 && <div className="card"><h4>Steps</h4><div className="log" ref={logRef}>{frames.map((fr, k) => <div key={k} className={k === i ? 'on' : k < i ? 'past' : ''} onClick={() => { setPlaying(false); setI(k) }}><span>{k + 1}</span>{fr.msg}</div>)}</div></div>}
             {prefs.showProblems && <div className="card"><h4>Practice problems</h4><ul>{algo.problems.map(p => <li key={p}>{p}</li>)}</ul></div>}
           </div>
         </div>

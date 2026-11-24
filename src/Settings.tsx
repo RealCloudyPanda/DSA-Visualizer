@@ -3,7 +3,7 @@ import { Prefs, DEFAULT_PREFS, COLOR_KEYS, DEFAULT_COLORS, ACCENTS } from './pre
 type P = { prefs: Prefs; set: (p: Prefs) => void; onClose: () => void }
 export default function Settings({ prefs, set, onClose }: P) {
   const up = <K extends keyof Prefs>(k: K, v: Prefs[K]) => set({ ...prefs, [k]: v })
-  const tog = (k: 'autoplay' | 'loop' | 'showCode' | 'showVars' | 'showProblems' | 'anim', label: string) => (
+  const tog = (k: 'autoplay' | 'loop' | 'showCode' | 'showVars' | 'showProblems' | 'showLog' | 'anim', label: string) => (
     <label className="tog"><input type="checkbox" checked={prefs[k]} onChange={e => up(k, e.target.checked)} />{label}</label>
   )
   return (
@@ -36,6 +36,7 @@ export default function Settings({ prefs, set, onClose }: P) {
           <h4>Panels</h4>
           {tog('showCode', 'Pseudocode')}
           {tog('showVars', 'Variables')}
+          {tog('showLog', 'Step log')}
           {tog('showProblems', 'Practice problems')}
         </section>
         <button onClick={() => set(DEFAULT_PREFS)}>Reset all settings</button>
