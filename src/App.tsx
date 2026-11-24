@@ -37,6 +37,7 @@ export default function App() {
   const [focus, setFocus] = useState(false)
   const searchRef = useRef<HTMLInputElement>(null)
   const logRef = useRef<HTMLDivElement>(null)
+  const touch = useRef(0)
   useEffect(() => { if (prefs.sound && frames[i]) beep(220 + frames[i].line * 70 + (i % 3) * 15) }, [i, frames])
   useEffect(() => { const el = logRef.current?.querySelector('.on') as HTMLElement | null; const box = logRef.current; if (el && box) box.scrollTop = el.offsetTop - box.offsetTop - box.clientHeight / 2 }, [i])
   const speed = prefs.speed
@@ -140,7 +141,7 @@ export default function App() {
         <div className="msg">{f?.msg}</div>
         {legend.length > 0 && <div className="legend">{legend.map(k => <span key={k}><i style={{ background: `var(--c-${k})` }} />{COLOR_KEYS[k]}</span>)}</div>}
         <div className={'body ' + prefs.layout}>
-          <div className="views" style={{ zoom: prefs.zoom }}>{f?.views.map((v, k) => <ViewBox key={k} v={v} />)}</div>
+          <div className="views" style={{ zoom: prefs.zoom }} onTouchStart={e => { touch.current = e.touches[0].clientX }} onTouchEnd={e => { const d = e.changedTouches[0].clientX - touch.current; if (Math.abs(d) > 50) { setPlaying(false); setI(x => Math.max(0, Math.min(last, x + (d < 0 ? 1 : -1)))) } }}>{f?.views.map((v, k) => <ViewBox key={k} v={v} />)}</div>
           <div className="side">
             {prefs.showCode && <div className="codewrap"><button className="icon copy" title="Copy pseudocode" onClick={() => navigator.clipboard.writeText(algo.code.join('\n')).then(() => setToast('Pseudocode copied'))}>⧉</button><pre className="code card">{algo.code.map((l, k) => <div key={k} className={f?.line === k + 1 ? 'hl' : ''}><span className="ln">{k + 1}</span>{l || ' '}</div>)}</pre></div>}
             {prefs.showVars && f?.vars && <div className="card"><h4>Variables</h4><table className="vars"><tbody>{Object.entries(f.vars).map(([k, v]) => <tr key={k}><td>{k}</td><td>{JSON.stringify(v)}</td></tr>)}</tbody></table></div>}
