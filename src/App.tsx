@@ -1,36 +1,46 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Algo, CATS, Frame } from './core'
 import { ViewBox } from './Views'
+import Settings from './Settings'
+import { DEFAULT_PREFS, Prefs, applyPrefs, useStored } from './prefs'
 
 const mods = import.meta.glob<{ default: Algo }>('./algos/*.ts', { eager: true })
 const ALGOS = Object.entries(mods).map(([p, m]) => ({ id: p.slice(8, -3), ...m.default }))
 const pick = () => ALGOS.find(a => a.id === location.hash.slice(1)) ?? ALGOS[0]
 
 export default function App() {
+  const [prefs, setPrefs] = useStored<Prefs>('prefs', DEFAULT_PREFS)
   const [algo, setAlgo] = useState(pick)
-  const [input, setInput] = useState(algo?.input ?? '')
+  const [input, setInput] = useState(algo.input)
   const [frames, setFrames] = useState<Frame[]>([])
   const [i, setI] = useState(0)
   const [playing, setPlaying] = useState(false)
-  const [speed, setSpeed] = useState(500)
   const [err, setErr] = useState('')
-  const [theme, setTheme] = useState(() => localStorage.theme ?? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'))
-  useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.theme = theme }, [theme])
+  const [settings, setSettings] = useState(false)
+  const speed = prefs.speed
 
-  const run = (a: Algo, s: string) => {
-    try { setFrames(a.run(s)); setErr('') } catch (e) { setFrames([]); setErr(String(e)) }
-    setI(0); setPlaying(false)
+  useEffect(() => {
+    applyPrefs(prefs)
+    const m = matchMedia('(prefers-color-scheme: dark)'); const h = () => applyPrefs(prefs); m.addEventListener('change', h); return () => m.removeEventListener('change', h)
+  }, [prefs])
+
+  const run = (a: Algo, s: string, auto = prefs.autoplay) => {
+    try { setFrames(a.run(s)); setErr('') } catch (e) { setFrames([]); setErr(e instanceof Error ? e.message : String(e)) }
+    setI(0); setPlaying(auto)
   }
-  useEffect(() => { const h = () => { const a = pick(); setAlgo(a); setInput(a.input); run(a, a.input) }; addEventListener('hashchange', h); if (algo) run(algo, algo.input); return () => removeEventListener('hashchange', h) }, [])
+  useEffect(() => {
+    const h = () => { const a = pick(); setAlgo(a); setInput(a.input); run(a, a.input, false) }
+    addEventListener('hashchange', h); run(algo, algo.input, false); return () => removeEventListener('hashchange', h)
+  }, [])
   useEffect(() => {
     if (!playing) return
-    if (i >= frames.length - 1) { setPlaying(false); return }
+    if (i >= frames.length - 1) { if (prefs.loop && frames.length > 1) { const t = setTimeout(() => setI(0), speed * 2); return () => clearTimeout(t) } setPlaying(false); return }
     const t = setTimeout(() => setI(i + 1), speed); return () => clearTimeout(t)
-  }, [playing, i, frames, speed])
+  }, [playing, i, frames, speed, prefs.loop])
 
   const groups = useMemo(() => CATS.map(c => [c, ALGOS.filter(a => a.cat === c)] as const).filter(g => g[1].length), [])
-  if (!algo) return <p>No visualizers yet.</p>
   const f = frames[i]
+  const togglePlay = () => { if (i >= frames.length - 1) setI(0); setPlaying(p => !p) }
   return (
     <div className="app">
       <nav>
@@ -40,35 +50,38 @@ export default function App() {
         ))}
       </nav>
       <main>
-        <div className="head"><h1>{algo.name}</h1><span className="grow" /><button className="icon" title="Toggle theme" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>{theme === 'dark' ? '☀' : '☾'}</button></div>
+        <div className="head">
+          <h1>{algo.name}</h1><span className="grow" />
+          <button className="icon" title="Settings" onClick={() => setSettings(true)}>⚙</button>
+        </div>
         <div className="row">
-          <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && run(algo, input)} />
-          <button onClick={() => run(algo, input)}>Run</button>
+          <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && run(algo, input)} spellCheck={false} />
+          <button className="primary" onClick={() => run(algo, input)}>Run</button>
           <button onClick={() => { const s = algo.rand(); setInput(s); run(algo, s) }}>Random</button>
         </div>
         {algo.hint && <div className="hint">{algo.hint}</div>}
-        <div className="row">
-          <button onClick={() => setI(0)}>⏮</button>
-          <button onClick={() => setI(Math.max(0, i - 1))}>◀</button>
-          <button onClick={() => { if (i >= frames.length - 1) setI(0); setPlaying(!playing) }}>{playing ? 'Pause' : 'Play'}</button>
-          <button onClick={() => setI(Math.min(frames.length - 1, i + 1))}>▶</button>
-          <button onClick={() => setI(frames.length - 1)}>⏭</button>
-          <input type="range" min={0} max={Math.max(0, frames.length - 1)} value={i} onChange={e => setI(+e.target.value)} />
-          <span>{frames.length ? i + 1 : 0}/{frames.length}</span>
-          <label>Speed <input type="range" min={50} max={1500} step={50} value={1550 - speed} onChange={e => setSpeed(1550 - +e.target.value)} /></label>
+        <div className="row player">
+          <button className="icon" title="First step" onClick={() => setI(0)}>⏮</button>
+          <button className="icon" title="Previous step" onClick={() => setI(Math.max(0, i - 1))}>◀</button>
+          <button className="primary play" onClick={togglePlay}>{playing ? '❚❚ Pause' : '▶ Play'}</button>
+          <button className="icon" title="Next step" onClick={() => setI(Math.min(frames.length - 1, i + 1))}>▶</button>
+          <button className="icon" title="Last step" onClick={() => setI(frames.length - 1)}>⏭</button>
+          <input className="scrub" type="range" min={0} max={Math.max(0, frames.length - 1)} value={i} onChange={e => setI(+e.target.value)} />
+          <span className="count">{frames.length ? i + 1 : 0} / {frames.length}</span>
+          <label className="speed">Speed <input type="range" min={50} max={1500} step={50} value={1550 - speed} onChange={e => setPrefs({ ...prefs, speed: 1550 - +e.target.value })} /></label>
         </div>
-        {err && <div className="err">{err}</div>}
+        {err && <div className="err">⚠ {err}</div>}
         <div className="msg">{f?.msg}</div>
         <div className="body">
-          <div className="views">{f?.views.map((v, k) => <ViewBox key={k} v={v} />)}</div>
+          <div className="views" style={{ zoom: prefs.zoom }}>{f?.views.map((v, k) => <ViewBox key={k} v={v} />)}</div>
           <div className="side">
-            <pre className="code card">{algo.code.map((l, k) => <div key={k} className={f?.line === k + 1 ? 'hl' : ''}>{l || ' '}</div>)}</pre>
-            {f?.vars && <table className="vars"><tbody>{Object.entries(f.vars).map(([k, v]) => <tr key={k}><td>{k}</td><td>{JSON.stringify(v)}</td></tr>)}</tbody></table>}
-            <h4>Practice problems</h4>
-            <ul>{algo.problems.map(p => <li key={p}>{p}</li>)}</ul>
+            {prefs.showCode && <pre className="code card">{algo.code.map((l, k) => <div key={k} className={f?.line === k + 1 ? 'hl' : ''}>{l || ' '}</div>)}</pre>}
+            {prefs.showVars && f?.vars && <div className="card"><h4>Variables</h4><table className="vars"><tbody>{Object.entries(f.vars).map(([k, v]) => <tr key={k}><td>{k}</td><td>{JSON.stringify(v)}</td></tr>)}</tbody></table></div>}
+            {prefs.showProblems && <div className="card"><h4>Practice problems</h4><ul>{algo.problems.map(p => <li key={p}>{p}</li>)}</ul></div>}
           </div>
         </div>
       </main>
+      {settings && <Settings prefs={prefs} set={setPrefs} onClose={() => setSettings(false)} />}
     </div>
   )
 }
