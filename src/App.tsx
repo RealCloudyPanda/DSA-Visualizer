@@ -17,6 +17,9 @@ export default function App() {
   const [prefs, setPrefs] = useStored<Prefs>('prefs', DEFAULT_PREFS)
   const [saved, setSaved] = useStored<Record<string, string[]>>('inputs', {})
   const [toast, setToast] = useState('')
+  const [learned, setLearned] = useStored<string[]>('learned', [])
+  const [favs, setFavs] = useStored<string[]>('favs', [])
+  const flip = (list: string[], set: (v: string[]) => void, id: string) => set(list.includes(id) ? list.filter(x => x !== id) : [...list, id])
   useEffect(() => { if (!toast) return; const t = setTimeout(() => setToast(''), 1800); return () => clearTimeout(t) }, [toast])
   const [algo, setAlgo] = useState(pick)
   const [input, setInput] = useState(algo.input)
@@ -76,7 +79,7 @@ export default function App() {
         ' ': togglePlay, ArrowRight: () => { setPlaying(false); setI(x => Math.min(last, x + n)) }, ArrowLeft: () => { setPlaying(false); setI(x => Math.max(0, x - n)) },
         Home: () => setI(0), End: () => setI(last), r: randomize, j: () => go(1), k: () => go(-1),
         '[': () => setPrefs({ ...prefs, speed: Math.min(1500, speed + 100) }), ']': () => setPrefs({ ...prefs, speed: Math.max(50, speed - 100) }),
-        t: () => setPrefs({ ...prefs, theme: document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark' }), s: () => setSettings(true), f: () => setFocus(x => !x), '/': () => { setNavOpen(true); setFocus(false); setTimeout(() => searchRef.current?.focus()) }, '?': () => setHelp(true),
+        t: () => setPrefs({ ...prefs, theme: document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark' }), s: () => setSettings(true), f: () => setFocus(x => !x), m: () => flip(learned, setLearned, algo.id), l: () => flip(favs, setFavs, algo.id), '/': () => { setNavOpen(true); setFocus(false); setTimeout(() => searchRef.current?.focus()) }, '?': () => setHelp(true),
       }
       const fn = map[e.key.length === 1 ? e.key.toLowerCase() : e.key] ?? map[e.key]; if (fn) { e.preventDefault(); fn() }
     }
@@ -86,13 +89,20 @@ export default function App() {
     <div className={'app' + (navOpen ? ' nav-open' : '') + (focus ? ' focus' : '')}>
       <nav>
         <div className="brand"><div className="logo">DS</div><h2>DSA Visualizer</h2></div>
-        <Sidebar ref={searchRef} algos={ALGOS} current={algo.id} onPick={() => setNavOpen(false)} />
+        <div className="progress" title="Visualizers marked as learned">
+          <div className="pbar"><div style={{ width: `${(100 * learned.length) / ALGOS.length}%` }} /></div>
+          <span>{learned.length} / {ALGOS.length} learned</span>
+        </div>
+        <Sidebar ref={searchRef} algos={ALGOS} current={algo.id} favs={favs} onPick={() => setNavOpen(false)} extra={a => learned.includes(a.id) && <span className="check">✓</span>} />
       </nav>
       <div className="scrim" onClick={() => setNavOpen(false)} />
       <main>
         <div className="head">
           <button className="icon menu" onClick={() => setNavOpen(true)} title="Menu">☰</button>
-          <h1>{algo.name}</h1><span className="tag">{algo.cat}</span><span className="grow" />
+          <h1>{algo.name}</h1><span className="tag">{algo.cat}</span>
+          <button className={'icon star' + (favs.includes(algo.id) ? ' on' : '')} title="Favorite (L)" onClick={() => flip(favs, setFavs, algo.id)}>{favs.includes(algo.id) ? '★' : '☆'}</button>
+          <span className="grow" />
+          <label className={'learn' + (learned.includes(algo.id) ? ' on' : '')} title="Mark as learned (M)"><input type="checkbox" checked={learned.includes(algo.id)} onChange={() => flip(learned, setLearned, algo.id)} />Learned</label>
           <button className="icon" title="Previous visualizer (K)" onClick={() => go(-1)}>‹</button>
           <button className="icon" title="Next visualizer (J)" onClick={() => go(1)}>›</button>
           <button className={'icon' + (focus ? ' primary' : '')} title="Focus mode (F)" onClick={() => setFocus(!focus)}>⛶</button>

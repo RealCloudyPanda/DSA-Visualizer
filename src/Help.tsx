@@ -1,7 +1,7 @@
 export const SHORTCUTS: [string, string][] = [
   ['Space', 'Play / pause'], ['← / →', 'Step back / forward'], ['Shift + ← / →', 'Jump 10 steps'], ['Home / End', 'First / last step'],
   ['R', 'Random input'], ['Enter', 'Run current input (in the input box)'], ['J / K', 'Next / previous visualizer'], ['[ / ]', 'Slower / faster'],
-  ['/', 'Search visualizers'], ['T', 'Toggle light / dark'], ['S', 'Settings'], ['F', 'Focus mode'], ['?', 'This help'], ['Esc', 'Close dialog / leave input'],
+  ['/', 'Search visualizers'], ['M', 'Mark as learned'], ['L', 'Favorite'], ['T', 'Toggle light / dark'], ['S', 'Settings'], ['F', 'Focus mode'], ['?', 'This help'], ['Esc', 'Close dialog / leave input'],
 ]
 export default function Help({ onClose }: { onClose: () => void }) {
   return (
